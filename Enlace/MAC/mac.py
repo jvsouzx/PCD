@@ -1,59 +1,48 @@
 import random
 import time
-import threading
 
-# Parâmetros da simulação
-NUM_DEVICES = 5
-TRANSMISSION_TIME = 2  # Tempo necessário para transmitir dados
-COLLISION_WAIT_TIME = 1  # Tempo para esperar após uma colisão
+class Device:
+    def __init__(self, name):
+        self.name = name
+        self.data_to_send = random.randint(1, 5)  # Cada dispositivo tem de 1 a 5 pacotes para enviar.
 
-# Estado do meio de transmissão
-transmitting = [False] * NUM_DEVICES  # Lista que indica se um dispositivo está transmitindo
-lock = threading.Lock()  # Lock para garantir exclusão mútua ao acessar a lista de transmissão
+    def attempt_transmission(self, medium):
+        if medium.is_busy:
+            print(f"{self.name}: Meio ocupado. Tentando novamente mais tarde.")
+            return False
+        else:
+            print(f"{self.name}: Meio livre. Transmitindo {self.data_to_send} pacotes.")
+            medium.is_busy = True
+            time.sleep(random.uniform(0.1, 0.5))  # Simula o tempo de transmissão.
+            medium.is_busy = False
+            return True
 
-def device_transmission(device_id):
-    global transmitting
+class TransmissionMedium:
+    def __init__(self):
+        self.is_busy = False
 
-    while True:
-        # Espera um tempo aleatório antes de tentar transmitir
-        time.sleep(random.uniform(1, 3))
-        
-        with lock:
-            # Verifica se o meio está livre
-            if any(transmitting):
-                print(f"Dispositivo {device_id} detectou que o meio está ocupado. Aguardando...")
-                return
-        
-            # Começa a transmitir
-            transmitting[device_id] = True
-            print(f"Dispositivo {device_id} está transmitindo...")
-        
-        # Simula o tempo de transmissão
-        time.sleep(TRANSMISSION_TIME)
-        
-        # Verifica se houve uma colisão
-        with lock:
-            if transmitting.count(True) > 1:
-                # Colisão detectada
-                print(f"Colisão detectada com o dispositivo {device_id}. Tentando novamente...")
-                transmitting[device_id] = False
-                time.sleep(COLLISION_WAIT_TIME + random.uniform(0, 1))
-            else:
-                # Transmissão concluída com sucesso
-                transmitting[device_id] = False
-                print(f"Dispositivo {device_id} terminou a transmissão com sucesso.")
+def simulate_aloha(devices, medium):
+    while any(device.data_to_send > 0 for device in devices):
+        for device in devices:
+            if device.data_to_send > 0:
+                if device.attempt_transmission(medium):
+                    device.data_to_send -= 1
+                else:
+                    collision_time = random.uniform(0.1, 0.5)  # Tempo de espera aleatório em caso de colisão.
+                    print(f"{device.name}: Colisão detectada. Esperando {collision_time:.2f} segundos.")
+                    time.sleep(collision_time)
 
 def main():
-    # Inicializa os dispositivos
-    threads = []
-    for device_id in range(NUM_DEVICES):
-        t = threading.Thread(target=device_transmission, args=(device_id,))
-        threads.append(t)
-        t.start()
-    
-    # Aguarda todos os dispositivos terminarem
-    for t in threads:
-        t.join()
+    # Criando os dispositivos.
+    devices = [Device(f"Dispositivo {i+1}") for i in range(4)]
+
+    # Criando o meio de transmissão compartilhado.
+    medium = TransmissionMedium()
+
+    # Iniciando a simulação.
+    simulate_aloha(devices, medium)
+
+    print("Transmissão concluída.")
 
 if __name__ == "__main__":
     main()
