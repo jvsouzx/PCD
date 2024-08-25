@@ -1,48 +1,55 @@
 import random
 import time
+import threading
 
-class Device:
-    def __init__(self, name):
-        self.name = name
-        self.data_to_send = random.randint(1, 5)  # Cada dispositivo tem de 1 a 5 pacotes para enviar.
+class Dispositivo(threading.Thread):
+    def __init__(self, nome, canal):
+        threading.Thread.__init__(self)
+        self.nome = nome
+        self.canal = canal
 
-    def attempt_transmission(self, medium):
-        if medium.is_busy:
-            print(f"{self.name}: Meio ocupado. Tentando novamente mais tarde.")
-            return False
-        else:
-            print(f"{self.name}: Meio livre. Transmitindo {self.data_to_send} pacotes.")
-            medium.is_busy = True
-            time.sleep(random.uniform(0.1, 0.5))  # Simula o tempo de transmissão.
-            medium.is_busy = False
-            return True
+    def run(self):
+        while True:
+            # O dispositivo tenta transmitir dados
+            if self.canal.ocupado:
+                print(f'{self.nome}: O canal está ocupado, aguardando...')
+                time.sleep(random.uniform(1, 3))  # Espera um tempo aleatório antes de tentar novamente
+            else:
+                print(f'{self.nome}: Tentando transmitir...')
+                self.canal.ocupado = True  # O canal está agora ocupado
+                time.sleep(random.uniform(0.5, 1.5))  # Tempo de transmissão
 
-class TransmissionMedium:
-    def __init__(self):
-        self.is_busy = False
-
-def simulate_aloha(devices, medium):
-    while any(device.data_to_send > 0 for device in devices):
-        for device in devices:
-            if device.data_to_send > 0:
-                if device.attempt_transmission(medium):
-                    device.data_to_send -= 1
+                # Verifica se houve colisão
+                if self.canal.colisao_ocorreu():
+                    print(f'{self.nome}: Colisão detectada! Aguardando para tentar novamente...')
+                    time.sleep(random.uniform(1, 3))  # Espera um tempo aleatório antes de tentar novamente
                 else:
-                    collision_time = random.uniform(0.1, 0.5)  # Tempo de espera aleatório em caso de colisão.
-                    print(f"{device.name}: Colisão detectada. Esperando {collision_time:.2f} segundos.")
-                    time.sleep(collision_time)
+                    print(f'{self.nome}: Transmissão bem-sucedida!')
+                    self.canal.ocupado = False  # Libera o canal após a transmissão
 
-def main():
-    # Criando os dispositivos.
-    devices = [Device(f"Dispositivo {i+1}") for i in range(4)]
+class Canal:
+    def __init__(self):
+        self.ocupado = False
+        self.transmissores = 0
 
-    # Criando o meio de transmissão compartilhado.
-    medium = TransmissionMedium()
+    def colisao_ocorreu(self):
+        return self.transmissores > 1
 
-    # Iniciando a simulação.
-    simulate_aloha(devices, medium)
+    def registrar_transmissao(self):
+        self.transmissores += 1
 
-    print("Transmissão concluída.")
+    def finalizar_transmissao(self):
+        self.transmissores -= 1
+
+def simular_aloha():
+    canal = Canal()
+    dispositivos = [Dispositivo(f'Dispositivo-{i}', canal) for i in range(5)]  # 5 dispositivos na rede
+
+    for dispositivo in dispositivos:
+        dispositivo.start()
+
+    for dispositivo in dispositivos:
+        dispositivo.join()
 
 if __name__ == "__main__":
-    main()
+    simular_aloha()

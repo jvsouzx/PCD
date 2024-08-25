@@ -1,77 +1,77 @@
 class VLAN:
-    def __init__(self, vlan_id):
-        self.vlan_id = vlan_id
-        self.devices = []
+    def __init__(self, id_vlan):
+        self.id_vlan = id_vlan
+        self.dispositivos = []
 
-    def add_device(self, device):
-        self.devices.append(device)
+    def add_dispositivo(self, dispositivo):
+        self.dispositivos.append(dispositivo)
 
     def __str__(self):
-        return f"VLAN {self.vlan_id}: {[device.mac_address for device in self.devices]}"
+        return f"VLAN {self.id_vlan}: {[dispositivo.endereco_mac for dispositivo in self.dispositivos]}"
 
 
-class Device:
-    def __init__(self, mac_address, vlan):
-        self.mac_address = mac_address
+class Dispositivo:
+    def __init__(self, endereco_mac, vlan):
+        self.endereco_mac = endereco_mac
         self.vlan = vlan
-        vlan.add_device(self)
+        vlan.add_dispositivo(self)
 
-    def send_message(self, recipient_mac, message):
-        if self.vlan.can_communicate(recipient_mac):
-            print(f"Device {self.mac_address} in VLAN {self.vlan.vlan_id} sends message to {recipient_mac}: {message}")
+    def envia_mensagem(self, destinatario_mac, mensagem):
+        if self.vlan.pode_comunicar(destinatario_mac):
+            print(f"Dispositivo {self.endereco_mac} na VLAN {self.vlan.id_vlan} envia mensagem para {destinatario_mac}: {mensagem}")
         else:
-            print(f"Device {self.mac_address} in VLAN {self.vlan.vlan_id} cannot communicate with {recipient_mac}")
+            print(f"Dispositivo {self.endereco_mac} na VLAN {self.vlan.id_vlan} não pode comunicar com {destinatario_mac}")
 
 
-class Network:
+class Rede:
     def __init__(self):
         self.vlans = {}
 
-    def add_vlan(self, vlan_id):
-        if vlan_id not in self.vlans:
-            self.vlans[vlan_id] = VLAN(vlan_id)
+    def add_vlan(self, id_vlan):
+        if id_vlan not in self.vlans:
+            self.vlans[id_vlan] = VLAN(id_vlan)
 
-    def get_vlan(self, vlan_id):
-        return self.vlans.get(vlan_id, None)
+    def get_vlan(self, id_vlan):
+        return self.vlans.get(id_vlan, None)
 
-    def add_device(self, mac_address, vlan_id):
-        vlan = self.get_vlan(vlan_id)
+    def add_dispositivo(self, endereco_mac, id_vlan):
+        vlan = self.get_vlan(id_vlan)
         if vlan:
-            return Device(mac_address, vlan)
+            return Dispositivo(endereco_mac, vlan)
         else:
-            print(f"VLAN {vlan_id} not found")
+            print(f"VLAN {id_vlan} not found")
             return None
 
-    def get_devices(self, vlan_id):
-        vlan = self.get_vlan(vlan_id)
+    def get_dispositivos(self, id_vlan):
+        vlan = self.get_vlan(id_vlan)
         if vlan:
-            return vlan.devices
+            return vlan.dispositivos
         return []
 
-    def can_communicate(self, sender_mac, recipient_mac):
-        sender_vlan = None
-        recipient_vlan = None
+    def pode_comunicar(self, remetente_mac, destinatario_mac):
+        vlan_remetente = None
+        vlan_destinatario = None
         for vlan in self.vlans.values():
-            for device in vlan.devices:
-                if device.mac_address == sender_mac:
-                    sender_vlan = vlan
-                if device.mac_address == recipient_mac:
-                    recipient_vlan = vlan
-        return sender_vlan == recipient_vlan
+            for dispositivo in vlan.dispositivos:
+                if dispositivo.endereco_mac == remetente_mac:
+                    vlan_remetente = vlan
+                if dispositivo.endereco_mac == destinatario_mac:
+                    vlan_destinatario = vlan
+        return vlan_remetente == vlan_destinatario
 
 
-# Criar a rede e adicionar VLANs
-network = Network()
-network.add_vlan(10)
-network.add_vlan(20)
+# Cria a rede e adicionar VLANs
+Rede = Rede()
+Rede.add_vlan(10)
+Rede.add_vlan(20)
 
-# Adicionar dispositivos às VLANs
-device1 = network.add_device('00:1A:2B:3C:4D:5E', 10)
-device2 = network.add_device('00:1A:2B:3C:4D:5F', 10)
-device3 = network.add_device('00:1A:2B:3C:4D:60', 20)
+# Adiciona dispositivos às VLANs
+dispositivo1 = Rede.add_dispositivo('00:1A:2B:3C:4D:5E', 10)
+dispositivo2 = Rede.add_dispositivo('00:1A:2B:3C:4D:5F', 10)
+dispositivo3 = Rede.add_dispositivo('00:1A:2B:3C:4D:60', 20)
 
-# Testar a comunicação
-device1.send_message('00:1A:2B:3C:4D:5F', "Hello from device1")  # Deve ser possível
-device1.send_message('00:1A:2B:3C:4D:60', "Hello from device1")  # Deve ser impossível
-device3.send_message('00:1A:2B:3C:4D:5F', "Hello from device3")  # Deve ser impossível
-device3.send_message('00:1A:2B:3C:4D:60', "Hello from device3")  # Deve ser possível
+# Testa a comunicação
+dispositivo1.envia_mensagem('00:1A:2B:3C:4D:5F', "Hello from dispositivo1")  # Deve ser possível
+dispositivo1.envia_mensagem('00:1A:2B:3C:4D:60', "Hello from dispositivo1")  # Deve ser impossível
+dispositivo3.envia_mensagem('00:1A:2B:3C:4D:5F', "Hello from dispositivo3")  # Deve ser impossível
+dispositivo3.envia_mensagem('00:1A:2B:3C:4D:60', "Hello from dispositivo3")  # Deve ser possível
