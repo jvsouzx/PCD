@@ -17,14 +17,14 @@ Implementação de uma API REST simples em Python com as operações CRUD.
             return jsonify(new_item), 201
         ``` 
     - GET
-        ```
+        ```python
         @app.route('/items', methods=['GET'])
         def get_items():
             data = load_data()
             return jsonify(data)
         ```
     - PUT
-        ```
+        ```python
         @app.route('/items/<int:item_id>', methods=['PUT'])
         def update_item(item_id):
             data = load_data()
@@ -36,7 +36,7 @@ Implementação de uma API REST simples em Python com as operações CRUD.
             return jsonify({'message': 'Item não encontrado'}), 404
         ``` 
     - DELETE
-        ```
+        ```python
         @app.route('/items/<int:item_id>', methods=['DELETE'])
         def delete_item(item_id):
             data = load_data()
