@@ -48,6 +48,6 @@ Implementação de uma API REST simples em Python com as operações CRUD.
             return jsonify({'message': 'Item não encontrado'}), 404
 
         ``` 
-3. Teste
+3. Teste \\
     Execute o arquivo `main.py`, em outro terminal, na pasta do projeto execute o arquivo `test.py`
      
