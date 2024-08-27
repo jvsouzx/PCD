@@ -7,7 +7,7 @@ Implementação de uma API REST simples em Python com as operações CRUD.
     - Instale a biblioteca `Flask`
 2. Implementação
     - POST
-        ```
+        ```python
         @app.route('/items', methods=['POST'])
         def create_item():
             data = load_data()
